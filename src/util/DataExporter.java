@@ -8,7 +8,7 @@ public class DataExporter {
     private final String targetDirectoryPath;
 
     public DataExporter() {
-        this.targetDirectoryPath = System.getProperty("user.dir") + "/data";;
+        this.targetDirectoryPath = System.getProperty("user.dir") + "/data";
     }
 
     public void save(double[][] matrix, String fileName) {
