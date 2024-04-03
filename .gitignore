@@ -1,4 +1,3 @@
-# Ignore IDE files
-.idea/
+# IDE settings
+/.idea/
 project.iml
-
