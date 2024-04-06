@@ -4,3 +4,6 @@ project.iml
 
 # Input data
 /data/*
+
+# .class files
+/out/&
