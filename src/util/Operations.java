@@ -4,18 +4,6 @@ import java.util.Arrays;
 
 public class Operations {
 
-    public static void print(double[][] matrix) {
-        int rows = matrix.length;
-        int cols = matrix[0].length;
-
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                System.out.print(matrix[i][j] + "\t");
-            }
-            System.out.println();
-        }
-    }
-
     /**
      * Finds the maximum value of a matrix.
      *
@@ -23,7 +11,7 @@ public class Operations {
      * @return the maximum value in the array
      * @throws java.util.NoSuchElementException if the array is empty
      */
-    public static double findMatrixMax(double[][] matrix) {
+    public synchronized static double findMatrixMax(double[][] matrix) {
         // Transforms the 2D array to the stream of double values
         // and uses parallel streams to find the maximum value
         return Arrays.stream(matrix)
@@ -52,6 +40,21 @@ public class Operations {
                 // Compute the sum of corresponding elements from matrixA and matrixB
                 result[i][j] = matrixA[i][j] + matrixB[i][j];
             }
+        }
+    }
+
+    /**
+     * Find the sum of two vectors
+     *
+     * @param vectorA the first vector
+     * @param vectorB the second vector
+     * @param result the result vector
+     * @param a the "from" bound
+     * @param b the "to" bound
+     */
+    public static void findVectorsSum(double[] vectorA, double[] vectorB, double[] result, int a, int b) {
+        for (int i = a; i < b; i++) {
+            result[i] = vectorA[i] + vectorB[i];
         }
     }
 
@@ -104,6 +107,43 @@ public class Operations {
                     sum = t;
                 }
                 result[i][j] = sum;
+            }
+        }
+    }
+
+    /**
+     * Multiplies scalar by vector
+     *
+     * @param vector the vector
+     * @param scalar the scalar
+     * @param result the result vector
+     * @param a the "from" bound
+     * @param b the "to" bound
+     */
+    public static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
+        for (int i = a; i < b; i++) {
+            result[i] *= scalar;
+        }
+    }
+
+    /**
+     * Multiplies vector by matrix
+     *
+     * @param vector the vector
+     * @param matrix the matrix
+     * @param result the result vector
+     * @param a the "from" bound
+     * @param b the "to" bound
+     */
+    public static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
+        // Iterate over the specified range [a, b]
+        for (int col = a; col < b; col++) {
+            // Initialize the result for this column
+            result[col] = 0.0;
+
+            // Multiply each element of the vector by the corresponding row element of the matrix column
+            for (int row = 0; row < vector.length; row++) {
+                result[col] += vector[row] * matrix[row][col];
             }
         }
     }
