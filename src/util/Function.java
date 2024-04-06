@@ -19,8 +19,9 @@ public class Function {
     private boolean maxMethodCalled;
 
     public Function() {
-        this.cyclicBarrier = new CyclicBarrier(4);                      // barrier for threads which work with a function
-        this.endBarrier = new CyclicBarrier(5);                         // barrier for the main thread to wait for the end of calculations
+        int numberOfThreads = Runtime.getRuntime().availableProcessors();
+        this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                      // barrier for threads which work with a function
+        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                         // barrier for the main thread to wait for the end of calculations
         this.threadPayload = SIZE / 4;                                         // defining the part of the matrices and vector for threads to work with
         this.MF = new double[SIZE][SIZE];                                      // defining result matrix
         this.maxMethodCalled = false;                                          // flag to check if one of threads called the max of the matrix function
@@ -31,7 +32,6 @@ public class Function {
         MM = dataImporter.importMatrix("MM");
         B = dataImporter.importVector("B");
         D = dataImporter.importVector("D");
-        int numberOfThreads = Runtime.getRuntime().availableProcessors();
         this.threads = new Thread[numberOfThreads];                            // thread pool
     }
 
