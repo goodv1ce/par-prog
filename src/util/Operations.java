@@ -122,7 +122,7 @@ public class Operations {
      */
     public static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
         for (int i = a; i < b; i++) {
-            result[i] *= scalar;
+            result[i] = vector[i] * scalar;
         }
     }
 

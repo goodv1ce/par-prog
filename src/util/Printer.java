@@ -19,16 +19,4 @@ public class Printer {
             }
         }
     }
-
-    public static void printMatrix(double[][] matrix) {
-        int rows = matrix.length;
-        int cols = matrix[0].length;
-
-        for (double[] doubles : matrix) {
-            for (int j = 0; j < cols; j++) {
-                System.out.print(doubles[j] + "\t");
-            }
-            System.out.println();
-        }
-    }
 }

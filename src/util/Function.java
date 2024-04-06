@@ -67,15 +67,14 @@ public class Function {
         for (int i = 0; i < threads.length; i++) {
             int finalI = i;
             threads[i] = new Thread(() -> {
-                int n = finalI;
                 // dynamically assign bounds for every thread via threadPayload var
-                Operations.findMatricesSum(ME, MM, tempVar, n * threadPayload, (n + 1) * threadPayload);        // tempVar = ME + MM
+                Operations.findMatricesSum(ME, MM, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);        // tempVar = ME + MM
                 waitForOtherThreads();
-                Operations.multiplyMatricesChunk(MD, tempVar, MF, n * threadPayload, (n + 1) * threadPayload);  // MF = MD * (ME + MM) OR MD * tempVar
+                Operations.multiplyMatricesChunk(MD, tempVar, MF, finalI * threadPayload, (finalI + 1) * threadPayload);  // MF = MD * (ME + MM) OR MD * tempVar
                 waitForOtherThreads();
-                Operations.multiplyMatricesChunk(ME, MM, tempVar, n * threadPayload, (n + 1) * threadPayload);  // tempVar = ME * MM
+                Operations.multiplyMatricesChunk(ME, MM, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);  // tempVar = ME * MM
                 waitForOtherThreads();
-                Operations.findMatricesDifference(MF, tempVar, MF, n * threadPayload, (n + 1) * threadPayload); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
+                Operations.findMatricesDifference(MF, tempVar, MF, finalI * threadPayload, (finalI + 1) * threadPayload); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
                 waitForOtherThreads();
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
                 waitForTheOtherThreadsToEnd();
@@ -120,7 +119,6 @@ public class Function {
         for (int i = 0; i < threads.length; i++) {
             int finalI = i;
             threads[i] = new Thread(() -> {
-                int n = finalI;
                 double t = 0.0;
                 // calling the findMatrixMax method only one and setting the flag
                 // so other threads won't call the method
@@ -131,11 +129,11 @@ public class Function {
                     }
                 }
                 // dynamically assign bounds for every thread via threadPayload var
-                Operations.multiplyScalarByVector(D, t, tempVar, n * threadPayload, (n + 1) * threadPayload);   // tempVar = D * max(MM)
+                Operations.multiplyScalarByVector(D, t, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);   // tempVar = D * max(MM)
                 waitForOtherThreads();
-                Operations.multiplyVectorByMatrix(B, ME, E, n * threadPayload, (n + 1) * threadPayload);        // E = B * ME
+                Operations.multiplyVectorByMatrix(B, ME, E, finalI * threadPayload, (finalI + 1) * threadPayload);        // E = B * ME
                 waitForOtherThreads();
-                Operations.findVectorsSum(E, tempVar, E, n * threadPayload, (n + 1) * threadPayload);          // E = B * ME + D * max(MM) OR E + tempVar
+                Operations.findVectorsSum(E, tempVar, E, finalI * threadPayload, (finalI + 1) * threadPayload);          // E = B * ME + D * max(MM) OR E + tempVar
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
                 waitForTheOtherThreadsToEnd();
             });
