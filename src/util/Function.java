@@ -3,6 +3,10 @@ package util;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
+/**
+ * The Function class provides methods for performing calculations according to predefined functions.
+ * It uses multithreading to speed up computation.
+ */
 public class Function {
     public static final int SIZE = 1000;
     private final int threadPayload;
@@ -18,6 +22,11 @@ public class Function {
     private final CyclicBarrier endBarrier;
     private boolean maxMethodCalled;
 
+    /**
+     * Constructs a Function object.
+     * Initializes matrices and vectors from imported data, sets up barriers for synchronization,
+     * and determines the number of threads to use for computation.
+     */
     public Function() {
         int numberOfThreads = Runtime.getRuntime().availableProcessors();
         this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                      // barrier for threads which work with a function
@@ -35,6 +44,9 @@ public class Function {
         this.threads = new Thread[numberOfThreads];                            // thread pool
     }
 
+    /**
+     * Waits for other threads to reach the barrier (for inner function calculations)
+     */
     private void waitForOtherThreads() {
         try {
             cyclicBarrier.await();
@@ -43,6 +55,9 @@ public class Function {
         }
     }
 
+    /**
+     * Waits for all threads to reach the barrier (wait for the end of calculation)
+     */
     private void waitForTheOtherThreadsToEnd() {
         try {
             endBarrier.await();
@@ -51,6 +66,9 @@ public class Function {
         }
     }
 
+    /**
+     * Calculates the first function as per the defined formula.
+     */
     public void calculateFirstFunction() {
         Timer firstFunctionTimer = new Timer();
         System.out.println("\n\nFunction 1:\n");
@@ -101,6 +119,9 @@ public class Function {
         dataExporter.save(MF, "MF-result.txt");
     }
 
+    /**
+     * Calculates the second function as per the defined formula.
+     */
     public void calculateSecondFunction() {
         Timer secondFunctionTimer = new Timer();
         System.out.println("Function 2:\n");

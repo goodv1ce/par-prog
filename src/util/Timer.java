@@ -1,7 +1,7 @@
 package util;
 
 /**
- * A stopwatch abstraction that measures the time between calls to the startCountdown and endCountdown functions
+ * A stopwatch abstraction that measures the time between calls to the startCountdown and endCountdown functions.
  */
 public class Timer {
     private long startTime;
@@ -15,7 +15,7 @@ public class Timer {
     }
 
     /**
-     * Ends the countdown
+     * Ends the countdown and calculates the execution time.
      */
     public void endCountDown() {
         long endTime = System.currentTimeMillis();
@@ -23,7 +23,7 @@ public class Timer {
     }
 
     /**
-     * Prints in the console last result
+     * Prints the last recorded execution time in milliseconds.
      */
     public void printResult() {
         System.out.println("Program execution time: " + executionTime + " ms");

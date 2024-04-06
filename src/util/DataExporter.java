@@ -4,13 +4,25 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * The DataExporter class provides methods for exporting data (matrices and vectors) to files.
+ */
 public class DataExporter {
     private final String targetDirectoryPath;
 
+    /**
+     * Constructs a new DataExporter object with the default target directory path.
+     */
     public DataExporter() {
         this.targetDirectoryPath = System.getProperty("user.dir") + "/data";
     }
 
+    /**
+     * Saves a matrix to a file with the specified filename.
+     *
+     * @param matrix    The matrix to be saved.
+     * @param fileName  The name of the file to which the matrix will be saved.
+     */
     public void save(double[][] matrix, String fileName) {
         final String path = targetDirectoryPath + "/" + fileName;
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
@@ -29,6 +41,12 @@ public class DataExporter {
         }
     }
 
+    /**
+     * Saves a vector to a file with the specified filename.
+     *
+     * @param vector    The vector to be saved.
+     * @param fileName  The name of the file to which the vector will be saved.
+     */
     public void save(double[] vector, String fileName) {
         final String path = targetDirectoryPath + "/" + fileName;
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
