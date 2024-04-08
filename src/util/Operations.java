@@ -30,7 +30,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void findMatricesSum(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public synchronized static void findMatricesSum(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
         int columns = matrixA[0].length;
 
         // Iterate over the chunk rows
@@ -52,7 +52,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void findVectorsSum(double[] vectorA, double[] vectorB, double[] result, int a, int b) {
+    public synchronized static void findVectorsSum(double[] vectorA, double[] vectorB, double[] result, int a, int b) {
         for (int i = a; i < b; i++) {
             result[i] = vectorA[i] + vectorB[i];
         }
@@ -67,7 +67,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void findMatricesDifference(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public synchronized static void findMatricesDifference(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
         int columns = matrixA[0].length;
 
         // Iterate over the chunk rows
@@ -89,7 +89,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void multiplyMatricesChunk(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public synchronized static void multiplyMatricesChunk(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
         int colsA = matrixA[0].length;
         int colsB = matrixB[0].length;
 
@@ -120,7 +120,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
+    public synchronized static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
         for (int i = a; i < b; i++) {
             result[i] = vector[i] * scalar;
         }
@@ -135,7 +135,7 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
+    public synchronized static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
         // Iterate over the specified range [a, b]
         for (int col = a; col < b; col++) {
             double c = 0.0;     // error sum
