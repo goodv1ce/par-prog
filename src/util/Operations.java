@@ -138,13 +138,17 @@ public class Operations {
     public static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
         // Iterate over the specified range [a, b]
         for (int col = a; col < b; col++) {
-            // Initialize the result for this column
-            result[col] = 0.0;
+            double c = 0.0;     // error sum
+            double sum = 0.0;
 
             // Multiply each element of the vector by the corresponding row element of the matrix column
             for (int row = 0; row < vector.length; row++) {
-                result[col] += vector[row] * matrix[row][col];
+                double y = (vector[row] * matrix[row][col]) - c;
+                double t = sum + y;
+                c = (t - sum) - y;
+                sum = t;
             }
+            result[col] = sum;
         }
     }
 }

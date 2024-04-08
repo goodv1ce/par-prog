@@ -35,7 +35,7 @@ public class DataExporter {
                 }
                 writer.newLine();
             }
-            System.out.println("Data has been saved to " + path);
+            System.out.println("\nData has been saved to " + path);
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
         }
@@ -56,7 +56,7 @@ public class DataExporter {
                     writer.write(", ");
                 }
             }
-            System.out.println("Data has been saved to " + path);
+            System.out.println("\nData has been saved to " + path);
         } catch (IOException e) {
             System.out.println("Error writing to file: " + e.getMessage());
         }
