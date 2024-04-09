@@ -9,7 +9,7 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class Function {
     public static final int SIZE = 1000;
-    private final int threadPayload;
+    public static final int THREAD_PAYLOAD = SIZE / 4;
     private final double[][] MF;
     double[][] MD;
     double[][] ME;
@@ -30,8 +30,7 @@ public class Function {
     public Function() {
         int numberOfThreads = Runtime.getRuntime().availableProcessors();
         this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                      // barrier for threads which work with a function
-        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                         // barrier for the main thread to wait for the end of calculations
-        this.threadPayload = SIZE / 4;                                         // defining the part of the matrices and vector for threads to work with
+        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                         // barrier for the main thread to wait for the end of calculations         // defining the part of the matrices and vector for threads to work with
         this.MF = new double[SIZE][SIZE];                                      // defining result matrix
         this.maxMethodCalled = false;                                          // flag to check if one of threads called the max of the matrix function
         this.E = new double[SIZE];
@@ -86,13 +85,13 @@ public class Function {
             int finalI = i;
             threads[i] = new Thread(() -> {
                 // dynamically assign bounds for every thread via threadPayload var
-                Operations.findMatricesSum(ME, MM, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);        // tempVar = ME + MM
+                Operations.findMatricesSum(ME, MM, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);        // tempVar = ME + MM
                 waitForOtherThreads();
-                Operations.multiplyMatricesChunk(MD, tempVar, MF, finalI * threadPayload, (finalI + 1) * threadPayload);  // MF = MD * (ME + MM) OR MD * tempVar
+                Operations.multiplyMatricesChunk(MD, tempVar, MF, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);  // MF = MD * (ME + MM) OR MD * tempVar
                 waitForOtherThreads();
-                Operations.multiplyMatricesChunk(ME, MM, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);  // tempVar = ME * MM
+                Operations.multiplyMatricesChunk(ME, MM, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);  // tempVar = ME * MM
                 waitForOtherThreads();
-                Operations.findMatricesDifference(MF, tempVar, MF, finalI * threadPayload, (finalI + 1) * threadPayload); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
+                Operations.findMatricesDifference(MF, tempVar, MF, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
                 waitForOtherThreads();
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
                 waitForTheOtherThreadsToEnd();
@@ -150,11 +149,11 @@ public class Function {
                     }
                 }
                 // dynamically assign bounds for every thread via threadPayload var
-                Operations.multiplyScalarByVector(D, t, tempVar, finalI * threadPayload, (finalI + 1) * threadPayload);   // tempVar = D * max(MM)
+                Operations.multiplyScalarByVector(D, t, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);   // tempVar = D * max(MM)
                 waitForOtherThreads();
-                Operations.multiplyVectorByMatrix(B, ME, E, finalI * threadPayload, (finalI + 1) * threadPayload);        // E = B * ME
+                Operations.multiplyVectorByMatrix(B, ME, E, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);        // E = B * ME
                 waitForOtherThreads();
-                Operations.findVectorsSum(E, tempVar, E, finalI * threadPayload, (finalI + 1) * threadPayload);          // E = B * ME + D * max(MM) OR E + tempVar
+                Operations.findVectorsSum(E, tempVar, E, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);          // E = B * ME + D * max(MM) OR E + tempVar
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
                 waitForTheOtherThreadsToEnd();
             });

@@ -1,8 +1,10 @@
 package util;
 
 import java.util.Arrays;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Operations {
+    private static final ReentrantLock lock = new ReentrantLock();
 
     /**
      * Finds the maximum value of a matrix.
@@ -11,7 +13,7 @@ public class Operations {
      * @return the maximum value in the array
      * @throws java.util.NoSuchElementException if the array is empty
      */
-    public synchronized static double findMatrixMax(double[][] matrix) {
+    public static double findMatrixMax(double[][] matrix) {
         // Transforms the 2D array to the stream of double values
         // and uses parallel streams to find the maximum value
         return Arrays.stream(matrix)
@@ -30,17 +32,18 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void findMatricesSum(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public static void findMatricesSum(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+        final double[][] localResult = new double[Function.SIZE][Function.SIZE];
         int columns = matrixA[0].length;
-
         // Iterate over the chunk rows
         for (int i = a; i < b; i++) {
             // Iterate over the columns
             for (int j = 0; j < columns; j++) {
                 // Compute the sum of corresponding elements from matrixA and matrixB
-                result[i][j] = matrixA[i][j] + matrixB[i][j];
+                localResult[i][j] = matrixA[i][j] + matrixB[i][j];
             }
         }
+        moveValuesMatrices(localResult, result, a, b);
     }
 
     /**
@@ -52,10 +55,12 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void findVectorsSum(double[] vectorA, double[] vectorB, double[] result, int a, int b) {
+    public static void findVectorsSum(double[] vectorA, double[] vectorB, double[] result, int a, int b) {
+        final double[] localResult = new double[Function.SIZE];
         for (int i = a; i < b; i++) {
-            result[i] = vectorA[i] + vectorB[i];
+            localResult[i] = vectorA[i] + vectorB[i];
         }
+        moveValuesVectors(localResult, result, a, b);
     }
 
     /**
@@ -67,7 +72,8 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void findMatricesDifference(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public static void findMatricesDifference(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+        final double[][] localResult = new double[Function.SIZE][Function.SIZE];
         int columns = matrixA[0].length;
 
         // Iterate over the chunk rows
@@ -75,9 +81,10 @@ public class Operations {
             // Iterate over the columns
             for (int j = 0; j < columns; j++) {
                 // Compute the difference of corresponding elements from matrixA and matrixB
-                result[i][j] = matrixA[i][j] - matrixB[i][j];
+                localResult[i][j] = matrixA[i][j] - matrixB[i][j];
             }
         }
+        moveValuesMatrices(localResult, result, a, b);
     }
 
     /**
@@ -89,7 +96,8 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void multiplyMatricesChunk(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+    public static void multiplyMatricesChunk(double[][] matrixA, double[][] matrixB, double[][] result, int a, int b) {
+        final double[][] localResult = new double[Function.SIZE][Function.SIZE];
         int colsA = matrixA[0].length;
         int colsB = matrixB[0].length;
 
@@ -106,9 +114,10 @@ public class Operations {
                     c = (t - sum) - y;
                     sum = t;
                 }
-                result[i][j] = sum;
+                localResult[i][j] = sum;
             }
         }
+        moveValuesMatrices(localResult, result, a, b);
     }
 
     /**
@@ -120,10 +129,12 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
+    public static void multiplyScalarByVector(double[] vector, double scalar, double[] result, int a, int b) {
+        final double[] localResult = new double[Function.SIZE];
         for (int i = a; i < b; i++) {
-            result[i] = vector[i] * scalar;
+            localResult[i] = vector[i] * scalar;
         }
+        moveValuesVectors(localResult, result, a, b);
     }
 
     /**
@@ -135,7 +146,8 @@ public class Operations {
      * @param a the "from" bound
      * @param b the "to" bound
      */
-    public synchronized static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
+    public static void multiplyVectorByMatrix(double[] vector, double[][] matrix, double[] result, int a, int b) {
+        final double[] localResult = new double[Function.SIZE];
         // Iterate over the specified range [a, b]
         for (int col = a; col < b; col++) {
             double c = 0.0;     // error sum
@@ -148,7 +160,44 @@ public class Operations {
                 c = (t - sum) - y;
                 sum = t;
             }
-            result[col] = sum;
+            localResult[col] = sum;
+        }
+        moveValuesVectors(localResult, result, a, b);
+    }
+
+    /**
+     * Moves values from one matrix to another within the specified range of rows.
+     *
+     * @param fromMatrix The source matrix from which values will be copied.
+     * @param toMatrix   The destination matrix where values will be copied.
+     * @param a          The starting index (inclusive) of rows to move values from.
+     * @param b          The ending index (exclusive) of rows to move values from.
+     */
+    private static void moveValuesMatrices(double[][] fromMatrix, double[][] toMatrix, int a, int b) {
+        lock.lock();
+        try {
+            for (int i = a; i < b; i++) {
+                System.arraycopy(fromMatrix[i], 0, toMatrix[i], 0, fromMatrix[0].length);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Moves values from one vector to another within the specified range of indices.
+     *
+     * @param fromVector The source vector from which values will be copied.
+     * @param toVector   The destination vector where values will be copied.
+     * @param a          The starting index (inclusive) from which values will be copied.
+     * @param b          The ending index (exclusive) up to which values will be copied.
+     */
+    private static void moveValuesVectors(double[] fromVector, double[] toVector, int a, int b) {
+        lock.lock();
+        try {
+            if (b - a >= 0) System.arraycopy(fromVector, a, toVector, a, b - a);
+        } finally {
+            lock.unlock();
         }
     }
 }
