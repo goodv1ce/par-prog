@@ -89,6 +89,7 @@ public class Operations {
 
     /**
      * Multiplies two matrices for the specified chunk
+     * It uses the Kahan algorithm to mitigate floating-point errors and improve precision.
      *
      * @param matrixA the first matrix
      * @param matrixB the second matrix
@@ -138,7 +139,8 @@ public class Operations {
     }
 
     /**
-     * Multiplies vector by matrix
+     * Multiplies a vector by a matrix within a specified range of columns.
+     * It uses the Kahan algorithm to mitigate floating-point errors and improve precision.
      *
      * @param vector the vector
      * @param matrix the matrix
@@ -166,7 +168,9 @@ public class Operations {
     }
 
     /**
-     * Moves values from one matrix to another within the specified range of rows.
+     * Moves values from one matrix to another within a specified range of rows.
+     * This method is thread-safe when used with an appropriate lock mechanism to protect
+     * concurrent access to shared resources.
      *
      * @param fromMatrix The source matrix from which values will be copied.
      * @param toMatrix   The destination matrix where values will be copied.
@@ -185,7 +189,9 @@ public class Operations {
     }
 
     /**
-     * Moves values from one vector to another within the specified range of indices.
+     * Moves values from one vector to another within a specified range.
+     * This method is thread-safe when used with an appropriate lock mechanism to protect
+     * concurrent access to shared resources.
      *
      * @param fromVector The source vector from which values will be copied.
      * @param toVector   The destination vector where values will be copied.
