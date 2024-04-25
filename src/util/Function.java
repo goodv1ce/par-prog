@@ -1,7 +1,6 @@
 package util;
 
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.*;
 
 /**
  * The Function class provides methods for performing calculations according to predefined functions.
@@ -11,6 +10,7 @@ public class Function {
     public static final int SIZE = 1000;
     public static final int THREAD_PAYLOAD = SIZE / 4;
     private final double[][] MF;
+    int numberOfThreads;
     double[][] MD;
     double[][] ME;
     double[][] MM;
@@ -28,19 +28,18 @@ public class Function {
      * and determines the number of threads to use for computation.
      */
     public Function() {
-        int numberOfThreads = Runtime.getRuntime().availableProcessors();
-        this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                      // barrier for threads which work with a function
-        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                         // barrier for the main thread to wait for the end of calculations         // defining the part of the matrices and vector for threads to work with
-        this.MF = new double[SIZE][SIZE];                                      // defining result matrix
-        this.maxMethodCalled = false;                                          // flag to check if one of threads called the max of the matrix function
+        this.numberOfThreads = Runtime.getRuntime().availableProcessors();
+        this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                                             // barrier for threads which work with a function
+        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                                     // barrier for the main thread to wait for the end of calculations         // defining the part of the matrices and vector for threads to work with
+        this.MF = new double[SIZE][SIZE];                                                                    // defining result matrix
+        this.maxMethodCalled = false;                                                                        // flag to check if one of threads called the max of the matrix function
         this.E = new double[SIZE];
         DataImporter dataImporter = new DataImporter();
         MD = dataImporter.importMatrix("MD");
         ME = dataImporter.importMatrix("ME");
         MM = dataImporter.importMatrix("MM");
         B = dataImporter.importVector("B");
-        D = dataImporter.importVector("D");
-        this.threads = new Thread[numberOfThreads];                            // thread pool
+        D = dataImporter.importVector("D");         // thread pool
     }
 
     /**
@@ -55,20 +54,10 @@ public class Function {
     }
 
     /**
-     * Waits for all threads to reach the barrier (wait for the end of calculation)
-     */
-    private void waitForTheOtherThreadsToEnd() {
-        try {
-            endBarrier.await();
-        } catch (BrokenBarrierException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Calculates the first function as per the defined formula.
      */
     public void calculateFirstFunction() {
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         Timer firstFunctionTimer = new Timer();
         System.out.println("\n\nFunction 1:\n");
         System.out.println("Ten elements of the first row of every matrix before calculations:\nMD:");
@@ -81,9 +70,10 @@ public class Function {
 
         // MF = MD * (ME + MM) - ME * MM
         double[][] tempVar = new double[SIZE][SIZE];    // tempVar for calculations
-        for (int i = 0; i < threads.length; i++) {
+        firstFunctionTimer.startCountdown();
+        for (int i = 0; i < numberOfThreads; i++) {
             int finalI = i;
-            threads[i] = new Thread(() -> {
+            executorService.execute(() -> {
                 // dynamically assign bounds for every thread via threadPayload var
                 Operations.findMatricesSum(ME, MM, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);        // tempVar = ME + MM
                 waitForOtherThreads();
@@ -94,18 +84,17 @@ public class Function {
                 Operations.findMatricesDifference(MF, tempVar, MF, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
                 waitForOtherThreads();
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
-                waitForTheOtherThreadsToEnd();
             });
         }
-
-        firstFunctionTimer.startCountdown();
-        // starting threads
-        for (Thread thread : threads) {
-            thread.start();
-        }
+        executorService.shutdown();
 
         // waiting for the end of threads work
-        waitForTheOtherThreadsToEnd();
+        try {
+            boolean isTerminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         firstFunctionTimer.endCountDown();
         firstFunctionTimer.printResult();
 
@@ -122,6 +111,7 @@ public class Function {
      * Calculates the second function as per the defined formula.
      */
     public void calculateSecondFunction() {
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
         Timer secondFunctionTimer = new Timer();
         System.out.println("Function 2:\n");
         System.out.println("Ten elements of every vector and matrix:\nB:");
@@ -136,9 +126,10 @@ public class Function {
 
         // E = B * ME + D * max(MM)
         double[] tempVar = new double[SIZE];    // tempVar for calculations
-        for (int i = 0; i < threads.length; i++) {
+        secondFunctionTimer.startCountdown();
+        for (int i = 0; i < numberOfThreads; i++) {
             int finalI = i;
-            threads[i] = new Thread(() -> {
+            executorService.execute(() -> {
                 double t = 0.0;
                 // calling the findMatrixMax method only one and setting the flag
                 // so other threads won't call the method
@@ -155,18 +146,18 @@ public class Function {
                 waitForOtherThreads();
                 Operations.findVectorsSum(E, tempVar, E, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);          // E = B * ME + D * max(MM) OR E + tempVar
                 System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
-                waitForTheOtherThreadsToEnd();
             });
         }
-
-        secondFunctionTimer.startCountdown();
-        // starting threads
-        for (Thread thread : threads) {
-            thread.start();
-        }
+        executorService.shutdown();
 
         // waiting for the end of threads work
-        waitForTheOtherThreadsToEnd();
+        try {
+            boolean isTerminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
         secondFunctionTimer.endCountDown();
         secondFunctionTimer.printResult();
 
