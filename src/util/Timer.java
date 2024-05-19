@@ -7,6 +7,13 @@ public class Timer {
     private long startTime;
     private long executionTime;
 
+    private Timer() {
+    }
+
+    public static Timer getInstance() {
+        return new Timer();
+    }
+
     /**
      * Starts the countdown
      */

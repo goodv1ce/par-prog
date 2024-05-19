@@ -1,5 +1,8 @@
 package util;
 
+import thread.factory.FunctionThreadPoolFactory;
+
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -10,17 +13,15 @@ public class Function {
     public static final int SIZE = 1000;
     public static final int THREAD_PAYLOAD = SIZE / 4;
     private final double[][] MF;
-    int numberOfThreads;
+    public static final int NUMBER_OF_THREADS = 4;
+    private final FunctionThreadPoolFactory threadPoolFactory;
     double[][] MD;
     double[][] ME;
     double[][] MM;
     double[] B;
     double[] D;
     double[] E;
-    Thread[] threads;
     private final CyclicBarrier cyclicBarrier;
-    private final CyclicBarrier endBarrier;
-    private boolean maxMethodCalled;
 
     /**
      * Constructs a Function object.
@@ -28,11 +29,8 @@ public class Function {
      * and determines the number of threads to use for computation.
      */
     public Function() {
-        this.numberOfThreads = Runtime.getRuntime().availableProcessors();
-        this.cyclicBarrier = new CyclicBarrier(numberOfThreads);                                             // barrier for threads which work with a function
-        this.endBarrier = new CyclicBarrier(numberOfThreads + 1);                                     // barrier for the main thread to wait for the end of calculations         // defining the part of the matrices and vector for threads to work with
-        this.MF = new double[SIZE][SIZE];                                                                    // defining result matrix
-        this.maxMethodCalled = false;                                                                        // flag to check if one of threads called the max of the matrix function
+        this.cyclicBarrier = new CyclicBarrier(NUMBER_OF_THREADS);
+        this.MF = new double[SIZE][SIZE];
         this.E = new double[SIZE];
         DataImporter dataImporter = new DataImporter();
         MD = dataImporter.importMatrix("MD");
@@ -40,6 +38,7 @@ public class Function {
         MM = dataImporter.importMatrix("MM");
         B = dataImporter.importVector("B");
         D = dataImporter.importVector("D");         // thread pool
+        this.threadPoolFactory = new FunctionThreadPoolFactory(this);
     }
 
     /**
@@ -54,47 +53,19 @@ public class Function {
     }
 
     /**
-     * Calculates the first function as per the defined formula.
+     * Calculates the first function
      */
     public void calculateFirstFunction() {
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        Timer firstFunctionTimer = new Timer();
-        System.out.println("\n\nFunction 1:\n");
-        System.out.println("Ten elements of the first row of every matrix before calculations:\nMD:");
-        Printer.printMatrixFirstRowInBounds(MD, 0, 10);
-        System.out.println("\n\nME:");
-        Printer.printMatrixFirstRowInBounds(ME, 0, 10);
-        System.out.println("\n\nMМ:");
-        Printer.printMatrixFirstRowInBounds(MM, 0, 10);
-        System.out.println();
-
-        // MF = MD * (ME + MM) - ME * MM
-        double[][] tempVar = new double[SIZE][SIZE];    // tempVar for calculations
+        Timer firstFunctionTimer = Timer.getInstance();
         firstFunctionTimer.startCountdown();
-        for (int i = 0; i < numberOfThreads; i++) {
-            int finalI = i;
-            executorService.execute(() -> {
-                // dynamically assign bounds for every thread via threadPayload var
-                Operations.findMatricesSum(ME, MM, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);        // tempVar = ME + MM
-                waitForOtherThreads();
-                Operations.multiplyMatricesChunk(MD, tempVar, MF, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);  // MF = MD * (ME + MM) OR MD * tempVar
-                waitForOtherThreads();
-                Operations.multiplyMatricesChunk(ME, MM, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);  // tempVar = ME * MM
-                waitForOtherThreads();
-                Operations.findMatricesDifference(MF, tempVar, MF, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
-                waitForOtherThreads();
-                System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
-            });
+        List<FutureTask<String>> futureTasks = threadPoolFactory.calculateFirstFunction();
+        for (FutureTask<String> task : futureTasks) {
+            try {
+                System.out.println(task.get());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        executorService.shutdown();
-
-        // waiting for the end of threads work
-        try {
-            boolean isTerminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         firstFunctionTimer.endCountDown();
         firstFunctionTimer.printResult();
 
@@ -111,52 +82,17 @@ public class Function {
      * Calculates the second function as per the defined formula.
      */
     public void calculateSecondFunction() {
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        Timer secondFunctionTimer = new Timer();
-        System.out.println("Function 2:\n");
-        System.out.println("Ten elements of every vector and matrix:\nB:");
-        Printer.printVectorInBounds(B, 0, 10);
-        System.out.println("\n\nD:");
-        Printer.printVectorInBounds(D, 0, 10);
-        System.out.println("\n\nME:");
-        Printer.printMatrixFirstRowInBounds(ME, 0, 10);
-        System.out.println("\n\nMМ:");
-        Printer.printMatrixFirstRowInBounds(MM, 0, 10);
-        System.out.println();
-
+        Timer secondFunctionTimer = Timer.getInstance();
         // E = B * ME + D * max(MM)
-        double[] tempVar = new double[SIZE];    // tempVar for calculations
         secondFunctionTimer.startCountdown();
-        for (int i = 0; i < numberOfThreads; i++) {
-            int finalI = i;
-            executorService.execute(() -> {
-                double t = 0.0;
-                // calling the findMatrixMax method only one and setting the flag
-                // so other threads won't call the method
-                synchronized (this) {
-                    if (!maxMethodCalled) {
-                        t = Operations.findMatrixMax(MM);   // t = max(MM)
-                        maxMethodCalled = true;
-                    }
-                }
-                // dynamically assign bounds for every thread via threadPayload var
-                Operations.multiplyScalarByVector(D, t, tempVar, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);   // tempVar = D * max(MM)
-                waitForOtherThreads();
-                Operations.multiplyVectorByMatrix(B, ME, E, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);        // E = B * ME
-                waitForOtherThreads();
-                Operations.findVectorsSum(E, tempVar, E, finalI * THREAD_PAYLOAD, (finalI + 1) * THREAD_PAYLOAD);          // E = B * ME + D * max(MM) OR E + tempVar
-                System.out.println("\n" + Thread.currentThread().getName() + " has finished ");
-            });
+        List<FutureTask<String>> futureTasks = threadPoolFactory.calculateSecondFunction();
+        for (FutureTask<String> task : futureTasks) {
+            try {
+                System.out.println(task.get());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        executorService.shutdown();
-
-        // waiting for the end of threads work
-        try {
-            boolean isTerminated = executorService.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
 
         secondFunctionTimer.endCountDown();
         secondFunctionTimer.printResult();
@@ -167,5 +103,37 @@ public class Function {
         // exporting to the file
         DataExporter dataExporter = new DataExporter();
         dataExporter.save(E, "E-result.txt");
+    }
+
+    public double[][] getMF() {
+        return MF;
+    }
+
+    public double[][] getMD() {
+        return MD;
+    }
+
+    public double[][] getME() {
+        return ME;
+    }
+
+    public double[][] getMM() {
+        return MM;
+    }
+
+    public double[] getB() {
+        return B;
+    }
+
+    public double[] getD() {
+        return D;
+    }
+
+    public double[] getE() {
+        return E;
+    }
+
+    public CyclicBarrier getCyclicBarrier() {
+        return cyclicBarrier;
     }
 }
