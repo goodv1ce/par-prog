@@ -1,6 +1,6 @@
 package util;
 
-import thread.factory.FunctionThreadPoolFactory;
+import thread.factory.FunctionForkAndJoinPoolFactory;
 
 import java.util.List;
 import java.util.concurrent.*;
@@ -14,7 +14,7 @@ public class Function {
     public static final int THREAD_PAYLOAD = SIZE / 4;
     private final double[][] MF;
     public static final int NUMBER_OF_THREADS = 4;
-    private final FunctionThreadPoolFactory threadPoolFactory;
+    private final FunctionForkAndJoinPoolFactory threadPoolFactory;
     double[][] MD;
     double[][] ME;
     double[][] MM;
@@ -38,7 +38,7 @@ public class Function {
         MM = dataImporter.importMatrix("MM");
         B = dataImporter.importVector("B");
         D = dataImporter.importVector("D");         // thread pool
-        this.threadPoolFactory = new FunctionThreadPoolFactory(this);
+        this.threadPoolFactory = new FunctionForkAndJoinPoolFactory(this);
     }
 
     /**
@@ -58,10 +58,10 @@ public class Function {
     public void calculateFirstFunction() {
         Timer firstFunctionTimer = Timer.getInstance();
         firstFunctionTimer.startCountdown();
-        List<FutureTask<String>> futureTasks = threadPoolFactory.calculateFirstFunction();
-        for (FutureTask<String> task : futureTasks) {
+        List<ForkJoinTask<String>> forkJoinTaskList = threadPoolFactory.calculateFirstFunction();
+        for (ForkJoinTask<String> task : forkJoinTaskList) {
             try {
-                System.out.println(task.get());
+                System.out.println(task.join());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -85,10 +85,10 @@ public class Function {
         Timer secondFunctionTimer = Timer.getInstance();
         // E = B * ME + D * max(MM)
         secondFunctionTimer.startCountdown();
-        List<FutureTask<String>> futureTasks = threadPoolFactory.calculateSecondFunction();
-        for (FutureTask<String> task : futureTasks) {
+        List<ForkJoinTask<String>> forkJoinTaskList = threadPoolFactory.calculateSecondFunction();
+        for (ForkJoinTask<String> task : forkJoinTaskList) {
             try {
-                System.out.println(task.get());
+                System.out.println(task.join());
             } catch (Exception e) {
                 e.printStackTrace();
             }

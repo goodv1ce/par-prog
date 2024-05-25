@@ -3,14 +3,14 @@ package thread.callable;
 import util.Operations;
 
 import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.RecursiveTask;
 
 /**
  * This class contains a logic to calculate the part of the first function.
  * Should be wrapped with a FutureTask
  */
-public class PartialSecondFunctionTask implements Callable<String> {
+public class PartialSecondFunctionTask extends RecursiveTask<String> {
     private final double[] B;
     private final double[] D;
     private final double[][] ME;
@@ -41,7 +41,7 @@ public class PartialSecondFunctionTask implements Callable<String> {
      * @return a message about the end of calculations
      */
     @Override
-    public String call() {
+    protected String compute() {
         double t = 0.0;
         // calling the findMatrixMax method only one and setting the flag
         // so other threads won't call the method

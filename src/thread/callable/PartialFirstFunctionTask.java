@@ -6,13 +6,14 @@ import util.Operations;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.RecursiveTask;
 
 
 /**
  * This class contains a logic to calculate the part of the first function.
  * Should be wrapped with a FutureTask
  */
-public class PartialFirstFunctionTask implements Callable<String> {
+public class PartialFirstFunctionTask extends RecursiveTask<String> {
     private final double[][] ME;
     private final double[][] MM;
     private final double[][] MD;
@@ -34,7 +35,7 @@ public class PartialFirstFunctionTask implements Callable<String> {
     }
 
     @Override
-    public String call() {
+    protected String compute() {
         Operations.findMatricesSum(ME, MM, tempVar, threadNumber * threadPayload, (threadNumber + 1) * threadPayload);        // tempVar = ME + MM
         waitForOtherThreads();
         Operations.multiplyMatricesChunk(MD, tempVar, MF, threadNumber * threadPayload, (threadNumber + 1) * threadPayload);  // MF = MD * (ME + MM) OR MD * tempVar
@@ -42,7 +43,6 @@ public class PartialFirstFunctionTask implements Callable<String> {
         Operations.multiplyMatricesChunk(ME, MM, tempVar, threadNumber * threadPayload, (threadNumber + 1) * threadPayload);  // tempVar = ME * MM
         waitForOtherThreads();
         Operations.findMatricesDifference(MF, tempVar, MF, threadNumber * threadPayload, (threadNumber + 1) * threadPayload); // MF = MD * (ME + MM) - ME * MM OR MF - tempVar
-        waitForOtherThreads();
 
         return "\nThread " + threadNumber + " has finished.";
     }
